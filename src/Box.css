@@ -1,0 +1,15 @@
+.imgWrap img{
+    width: 67%;
+    padding: 5px;
+    
+}
+.imgWrap{
+    align-items: center;
+    background-color: rgba(77,75,75,.582);
+    border-radius: 9px;
+    display: flex;
+    height: 102px;
+    justify-content: center;
+    margin: 0;
+    width: 100px;
+}

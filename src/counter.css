@@ -1,0 +1,33 @@
+.ocounter{
+    color: white;
+    position: relative;
+    margin-top: 450px;
+    margin-left: 20px;
+    width:47px;
+    height: 47px;
+    border-radius: 4px;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 25px;
+    
+    background-color: rgb(62,197,243);
+    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+}
+.ccounter{
+    color: white;
+    position: relative;
+    margin-top: 450px;
+    margin-right: 20px;
+    width:47px;
+    height: 47px;
+    border-radius: 4px;
+   
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 25px;
+    background-color: rgb(255,97,95);
+    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+}
