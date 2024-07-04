@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import "./App.css";
 import Box from "./Box";
 import boxes from "./boxes";
@@ -7,42 +7,61 @@ import Ocounter from "./Ocounter";
 import Ccounter from "./Ccounter";
 import { onSnapshot, doc, updateDoc } from "firebase/firestore";
 import { gameArray } from "./firebase";
+
 function App() {
+  const [x, setX] = useState("");
+  console.log(x);
   const [squares, setSquares] = useState(() => boxes);
   const [chance, setChance] = useState(0);
-  function toggleChance() {
+  const [gameOver, setGameover] = useState(0);
+
+  const toggleChance = useCallback(() => {
     setChance((x) => x + 1);
-  }
+  }, []);
+
+  const toggle = useCallback((key, onValue) => {
+    if (onValue === -1 && gameOver === 0) {
+      const newArray = squares.map((x) =>
+        x.id === key ? { id: key, on: !(chance % 2) } : x
+      );
+      setSquares(newArray);
+      toggleChance();
+    }
+  }, [squares, gameOver, chance]);
+
   useEffect(() => {
     check();
   }, [squares]);
-//   useEffect(()=>{
-//     const unsub = onSnapshot(doc(gameArray,"gameID"), (doc) => {
-//     // console.log("Current data: ", doc.data());
-// });
-//   },[])
-async function updatCloud(newArray){
-  try {
-    await updateDoc(doc(gameArray,"gameID"),{
-      squares: newArray,
-      playerTurn: chance % 2 === 0 ? "X" : "O",
-      gameOver:gameOver
-    })
-  }
-  catch(error){
-     console.log("Error updating game state",error)
-  }
-}
-  const [gameOver, setGameover] = useState(0);
-   function toggle(key, onValue) {
-    if (onValue === -1 && gameOver === 0) {
-      const newArray=squares.map(x=>(x.id===key)?({id:key,on:!(chance%2)}):x);
-      setSquares(newArray)
-      updatCloud(newArray)
-      toggleChance();
+
+  useEffect(() => {
+    async function updateCloud(newArray) {
+      try {
+        await updateDoc(doc(gameArray, "gameID"), {
+          squares: newArray,
+          playerTurn: chance % 2 === 0 ? "X" : "O",
+          gameOver: gameOver,
+        });
+      } catch (error) {
+        console.log("Error updating game state", error);
+      }
     }
-  }
-function check() {
+    updateCloud(squares);
+  }, [squares, chance]);
+
+  useEffect(() => {
+    const unsub = onSnapshot(doc(gameArray, "gameID"), (doc) => {
+      if(doc.exists()){
+        if(doc.data().squares.length===9){
+          setSquares(doc.data().squares);
+        }
+      setChance(doc.data().playerTurn === "X" ? 0 : 1);
+      setGameover(doc.data().gameOver);
+      }
+    });
+    return () => unsub(); // Cleanup on unmount
+  }, [chance]);
+
+  function check() {
     for (let i = 0; i < 9; i += 3) {
       if (
         squares[i].on === squares[i + 1].on &&
@@ -94,28 +113,26 @@ function check() {
       return;
     }
   }
-  const squareElements = Array.isArray(squares)
-    ? squares.map((square) => (
-        <Box key={square.id} id={square.id} on={square.on} toggle={toggle} />
-      ))
-    : [];
-  console.log(chance % 2);
-  let styleForView = gameOver
-    ? { background: "black" }
-    : {
-        background:
-          chance % 2
-            ? "linear-gradient(rgb(10, 43, 54),black, rgb(15, 14, 14))"
-            : "linear-gradient(rgb(38, 19, 19),black, rgb(15, 14, 14))",
-      };
+
+  const squareElements = useMemo(() => (
+    squares.map((square) => (
+      <Box key={square.id} id={square.id} on={square.on} toggle={toggle} />
+    ))
+  ), [squares, toggle]);
+
+  const styleForView = useMemo(() => (
+    gameOver ? { background: "black" } : {
+      background: chance % 2
+        ? "linear-gradient(rgb(10, 43, 54),black, rgb(15, 14, 14))"
+        : "linear-gradient(rgb(38, 19, 19),black, rgb(15, 14, 14))"
+    }
+  ), [gameOver, chance]);
+
   function reset() {
-    {
-       setSquares(boxes);
-    }
-    {
-       setGameover(0);
-    }
+    setSquares(boxes);
+    setGameover(0);
   }
+
   return (
     <div className="view" style={styleForView}>
       <div className="wrap">{squareElements}</div>
